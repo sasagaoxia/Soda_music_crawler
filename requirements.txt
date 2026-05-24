@@ -1,7 +1,7 @@
 # 核心依赖
-requests>=2.25.0
-selenium>=4.0.0
-moviepy>=1.0.3
+requests>=2.32.0
+selenium>=4.20.0
+moviepy>=2.0.0
 
-# 可选依赖
-webdriver-manager>=3.8.0
+# 可选依赖（Selenium 4.6+ 内置 Selenium Manager，可不安装此项）
+webdriver-manager>=4.0.0

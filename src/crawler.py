@@ -3,20 +3,25 @@
 # 功能: 核心爬虫功能
 # =============================================================================
 
-import requests
-import time,os
 import json
+import os
 import re
+import shutil
+import tempfile
+import time
 from pathlib import Path
+from typing import Optional
+
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from typing import Optional
+from selenium.webdriver.support.ui import WebDriverWait
+
 from .config import Config
-from .parser import PageParser
 from .converter import AudioConverter
+from .parser import PageParser
 
 class QiShuiMusicCrawler:
     """汽水音乐爬虫"""
@@ -25,36 +30,60 @@ class QiShuiMusicCrawler:
         self.config = config or Config()
         self.session = requests.Session()
         self.session.headers.update(self.config.get_headers())
-        
+
         self.parser = PageParser()
         self.converter = AudioConverter() if self.config.AUTO_CONVERT else None
-        
+
+        # Selenium 用的隔离 profile 目录，避免与日常 Chrome 冲突
+        self._chrome_user_dir: Optional[str] = None
+        self.driver = None
+
         if self.config.USE_SELENIUM:
             self.setup_selenium()
     
     def setup_selenium(self):
-        """设置Selenium WebDriver"""
+        """设置Selenium WebDriver (依赖 Selenium 4.6+ 内置的 Selenium Manager 自动管理驱动)"""
         try:
             chrome_options = Options()
             if self.config.HEADLESS:
-                chrome_options.add_argument('--headless')
+                chrome_options.add_argument('--headless=new')
             chrome_options.add_argument('--no-sandbox')
             chrome_options.add_argument('--disable-dev-shm-usage')
             chrome_options.add_argument('--disable-gpu')
             chrome_options.add_argument(f'--window-size={self.config.WINDOW_SIZE}')
             chrome_options.add_argument(f'--user-agent={self.config.USER_AGENT}')
-            
-            # 优化性能
+
+            # 反检测：移除 webdriver 标记。注意 `useAutomationExtension`
+            # 和 `excludeSwitches=enable-automation` 在 Chrome 132+ 已被弃用，
+            # 传入会导致子进程立刻退出 (session not created)，故只保留下面这一项。
+            chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+
+            # 用临时 profile 隔离，避免与用户日常运行的 Chrome 共享 user-data-dir
+            # 导致 "Chrome instance exited" 启动失败
+            self._chrome_user_dir = tempfile.mkdtemp(prefix="qishui_chrome_")
+            chrome_options.add_argument(f'--user-data-dir={self._chrome_user_dir}')
+
+            # 优化性能：禁用图片与通知
             prefs = {
                 "profile.managed_default_content_settings.images": 2,
-                "profile.default_content_setting_values.notifications": 2
+                "profile.default_content_setting_values.notifications": 2,
             }
             chrome_options.add_experimental_option("prefs", prefs)
-            
+
             self.driver = webdriver.Chrome(options=chrome_options)
+            # 进一步隐藏 webdriver 属性
+            self.driver.execute_cdp_cmd(
+                "Page.addScriptToEvaluateOnNewDocument",
+                {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"},
+            )
             print("✓ Selenium WebDriver 初始化成功")
         except Exception as e:
             print(f"⚠️ Selenium初始化失败: {e}")
+            print("   汽水音乐是 SPA 站点，必须经由 Selenium 抓取动态渲染后的页面，无法降级。")
+            print("   排查思路：")
+            print("   1) Chrome 浏览器已安装且可正常启动；")
+            print("   2) selenium 已升级到 4.6+，让 Selenium Manager 自动匹配 ChromeDriver；")
+            print("   3) 关闭所有正在运行的 Chrome 后重试。")
             self.config.USE_SELENIUM = False
             self.driver = None
     
@@ -142,7 +171,13 @@ class QiShuiMusicCrawler:
     def crawl_and_download(self, share_url: str, download_dir: str = None) -> bool:
         """完整的爬取和下载流程"""
         print(f"=== 开始处理: {share_url} ===")
-        
+
+        # 汽水音乐是 SPA，Selenium 不可用时 requests 拿到的只是空壳 HTML，
+        # 解析必然失败，提前结束并给出明确提示
+        if self.config.USE_SELENIUM and not self.driver:
+            print("❌ Selenium 未就绪，无法继续抓取动态页面。")
+            return False
+
         try:
             # 1. 获取真实URL
             if 'qishui.douyin.com/s/' in share_url:
@@ -213,7 +248,7 @@ class QiShuiMusicCrawler:
     def _save_track_info(self, track_info: dict, file_path: str):
         """保存音乐信息到JSON文件"""
         try:
-            info_file = file_path.replace('.mp4', '_info.json')
+            info_file = Path(file_path).with_suffix('.info.json')
             with open(info_file, 'w', encoding='utf-8') as f:
                 json.dump(track_info, f, ensure_ascii=False, indent=2)
         except Exception as e:
@@ -221,5 +256,10 @@ class QiShuiMusicCrawler:
     
     def close(self):
         """关闭资源"""
-        if hasattr(self, 'driver') and self.driver:
-            self.driver.quit()
+        if self.driver:
+            try:
+                self.driver.quit()
+            except Exception:
+                pass
+        if self._chrome_user_dir:
+            shutil.rmtree(self._chrome_user_dir, ignore_errors=True)

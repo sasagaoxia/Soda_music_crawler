@@ -1,9 +1,9 @@
 # 汽水音乐爬虫 🎵
 
-[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Selenium](https://img.shields.io/badge/Selenium-4.0+-orange.svg)](https://selenium-python.readthedocs.io/)
-[![MoviePy](https://img.shields.io/badge/MoviePy-1.0+-red.svg)](https://zulko.github.io/moviepy/)
+[![Selenium](https://img.shields.io/badge/Selenium-4.20+-orange.svg)](https://selenium-python.readthedocs.io/)
+[![MoviePy](https://img.shields.io/badge/MoviePy-2.0+-red.svg)](https://zulko.github.io/moviepy/)
 [![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)]()
 
 一个用于从汽水音乐下载歌曲并自动转换音频格式的Python爬虫工具。
@@ -38,7 +38,7 @@ qishui-music-crawler/
 
 ### 环境要求
 
-![Python](https://img.shields.io/badge/Python-3.7+-blue?style=flat-square&logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python&logoColor=white)
 ![Chrome](https://img.shields.io/badge/Chrome-Latest-green?style=flat-square&logo=googlechrome&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square)
 
@@ -52,16 +52,16 @@ pip install -r requirements.txt
 
 项目使用以下核心库：
 
-![Requests](https://img.shields.io/badge/requests-2.25.0+-blue?style=flat-square&logo=python&logoColor=white)
-![Selenium](https://img.shields.io/badge/selenium-4.0.0+-orange?style=flat-square&logo=selenium&logoColor=white)
-![MoviePy](https://img.shields.io/badge/moviepy-1.0.3+-red?style=flat-square&logo=python&logoColor=white)
-![WebDriver Manager](https://img.shields.io/badge/webdriver--manager-3.8.0+-green?style=flat-square&logo=python&logoColor=white)
+![Requests](https://img.shields.io/badge/requests-2.32.0+-blue?style=flat-square&logo=python&logoColor=white)
+![Selenium](https://img.shields.io/badge/selenium-4.20.0+-orange?style=flat-square&logo=selenium&logoColor=white)
+![MoviePy](https://img.shields.io/badge/moviepy-2.0.0+-red?style=flat-square&logo=python&logoColor=white)
+![WebDriver Manager](https://img.shields.io/badge/webdriver--manager-4.0.0+-green?style=flat-square&logo=python&logoColor=white)
 
 ```
-requests>=2.25.0        # HTTP请求处理
-selenium>=4.0.0         # 动态页面抓取
-moviepy>=1.0.3          # 音频格式转换
-webdriver-manager>=3.8.0 # Chrome驱动管理 (可选)
+requests>=2.32.0         # HTTP请求处理
+selenium>=4.20.0         # 动态页面抓取 (4.6+ 内置 Selenium Manager 自动下载驱动)
+moviepy>=2.0.0           # 音频格式转换 (2.0 起取消了 moviepy.editor 命名空间)
+webdriver-manager>=4.0.0 # Chrome驱动管理 (可选，Selenium 4.6+ 已不再必需)
 ```
 
 ### 运行程序
@@ -197,10 +197,13 @@ output_file = converter.convert_audio(input_file)
 
 **解决方案**:
 ```bash
-# 安装webdriver-manager (已在requirements.txt中)
+# 推荐：升级到 Selenium 4.6+，内置 Selenium Manager 会自动下载并管理 ChromeDriver
+pip install -U selenium
+
+# 备选：使用 webdriver-manager（已在 requirements.txt 中，作为可选项）
 pip install webdriver-manager
 
-# 或手动下载Chrome驱动并添加到PATH
+# 或手动下载 Chrome 驱动并加入 PATH
 ```
 
 ### 2. 音频转换失败
