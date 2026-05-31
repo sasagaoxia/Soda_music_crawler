@@ -1,22 +1,32 @@
 # 汽水音乐爬虫 🎵
 
-[![Python](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org)
+[![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Selenium](https://img.shields.io/badge/Selenium-4.0+-orange.svg)](https://selenium-python.readthedocs.io/)
-[![MoviePy](https://img.shields.io/badge/MoviePy-1.0+-red.svg)](https://zulko.github.io/moviepy/)
+[![Selenium](https://img.shields.io/badge/Selenium-4.20+-orange.svg)](https://selenium-python.readthedocs.io/)
+[![MoviePy](https://img.shields.io/badge/MoviePy-2.0+-red.svg)](https://zulko.github.io/moviepy/)
 [![Status](https://img.shields.io/badge/Status-Active-brightgreen.svg)]()
 
 一个用于从汽水音乐下载歌曲并自动转换音频格式的Python爬虫工具。
 
+## ⚡ 最新更新 (v2.0)
+
+- ✅ **多策略智能获取** - API接口 + HTML解析 + URL搜索三重保障
+- ✅ **智能URL提取** - 支持直接粘贴完整分享文本，自动识别链接
+- ✅ **版权智能检测** - 自动识别无版权歌曲并给出提示
+- ✅ **更稳定的解析** - 不再依赖单一数据结构，适应网站变化
+- ✅ **详细错误提示** - 清晰的失败原因和解决建议
+- ✅ **完整测试套件** - 一键测试所有功能模块
+
 ## ✨ 功能特性
 
 - 🔗 支持汽水音乐分享链接解析
-- 🎵 自动提取音频下载链接
+- 🎵 多策略智能提取音频链接（API + HTML + 直接搜索）
 - 📱 智能处理重定向和动态页面
 - 🎧 自动转换MP4到MP3格式
 - 📊 实时下载进度显示
 - 📁 批量转换现有文件
-- 🛡️ 完善的错误处理机制
+- 🛡️ 完善的错误处理和版权检测
+- 🔄 自动降级备用方案
 
 ## 📁 项目结构
 
@@ -38,7 +48,7 @@ qishui-music-crawler/
 
 ### 环境要求
 
-![Python](https://img.shields.io/badge/Python-3.7+-blue?style=flat-square&logo=python&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.9+-blue?style=flat-square&logo=python&logoColor=white)
 ![Chrome](https://img.shields.io/badge/Chrome-Latest-green?style=flat-square&logo=googlechrome&logoColor=white)
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey?style=flat-square)
 
@@ -48,20 +58,12 @@ qishui-music-crawler/
 pip install -r requirements.txt
 ```
 
-### 依赖说明
+### 测试系统
 
-项目使用以下核心库：
+运行测试脚本检查所有模块是否正常：
 
-![Requests](https://img.shields.io/badge/requests-2.25.0+-blue?style=flat-square&logo=python&logoColor=white)
-![Selenium](https://img.shields.io/badge/selenium-4.0.0+-orange?style=flat-square&logo=selenium&logoColor=white)
-![MoviePy](https://img.shields.io/badge/moviepy-1.0.3+-red?style=flat-square&logo=python&logoColor=white)
-![WebDriver Manager](https://img.shields.io/badge/webdriver--manager-3.8.0+-green?style=flat-square&logo=python&logoColor=white)
-
-```
-requests>=2.25.0        # HTTP请求处理
-selenium>=4.0.0         # 动态页面抓取
-moviepy>=1.0.3          # 音频格式转换
-webdriver-manager>=3.8.0 # Chrome驱动管理 (可选)
+```bash
+python test_system.py
 ```
 
 ### 运行程序
@@ -70,9 +72,23 @@ webdriver-manager>=3.8.0 # Chrome驱动管理 (可选)
 python main.py
 ```
 
-![Run](https://img.shields.io/badge/Run-python%20main.py-green?style=flat-square&logo=python&logoColor=white)
-
 ## 🎯 使用指南
+
+### ⚠️ 重要提示
+
+**版权限制：** 汽水音乐的歌曲有版权保护。如果遇到以下提示，说明该歌曲无法下载：
+- "该歌曲没有版权或已下架"
+- "未找到音频下载链接"
+
+**解决方法：** 换一首在APP中可以正常播放的歌曲。
+
+### 获取有效链接
+
+1. 打开汽水音乐APP
+2. 找到一首**可以正常播放**的歌曲
+3. 点击分享按钮
+4. 复制分享链接
+5. 粘贴到本程序中
 
 ### 基本使用
 
@@ -86,8 +102,18 @@ python main.py
    - `2` - 只转换现有的MP4文件
 
 3. **输入分享链接**（模式1）
+   
+   **支持两种输入方式：**
+   
+   ✅ **方式1: 直接粘贴完整分享文本（推荐）**
    ```
-   请输入汽水音乐分享链接: https://qishui.douyin.com/s/iaVudjjq/
+   《One Of The Girls x After Hours》@汽水音乐 https://qishui.douyin.com/s/iQfNnBfJ/
+   ```
+   程序会自动识别并提取链接，无需手动删除其他文字！
+   
+   ✅ **方式2: 只粘贴链接**
+   ```
+   https://qishui.douyin.com/s/iQfNnBfJ/
    ```
 
 ### 支持的链接格式
@@ -137,6 +163,42 @@ class Config:
 
 ## 🔧 核心模块
 
+### 工作原理 - 多策略智能获取
+
+程序使用三重策略确保最大成功率：
+
+#### 策略1: API接口获取（最稳定）
+```python
+from src.api_fetcher import APIFetcher
+
+fetcher = APIFetcher()
+track_id = fetcher.extract_track_id(url)
+track_info = fetcher.fetch_track_info_by_api(track_id)
+```
+
+**优势：**
+- 直接从API获取，不依赖HTML结构
+- 速度快，成功率高
+- 不易受网站改版影响
+
+#### 策略2: HTML智能解析（备用）
+```python
+from src.parser import PageParser
+
+parser = PageParser()
+track_info = parser.extract_track_info(html_content)
+```
+
+**功能：**
+- 多种数据源模式匹配
+- 递归搜索音频信息
+- 自动版权检测
+
+#### 策略3: 直接URL搜索（兜底）
+- 在页面源码中直接搜索音频链接
+- 正则匹配所有可能的音频URL
+- 最后的保障方案
+
 ### 1. 爬虫模块 (`crawler.py`)
 
 ```python
@@ -148,6 +210,7 @@ crawler.close()
 ```
 
 **功能：**
+- 多策略智能获取音频信息
 - 处理分享链接重定向
 - 使用Selenium获取动态内容
 - 下载音频文件
@@ -166,8 +229,23 @@ track_info = parser.extract_track_info(html_content)
 - 多模式正则表达式匹配
 - 递归搜索音频信息
 - JSON数据解析
+- 版权状态检测
 
-### 3. 转换模块 (`converter.py`)
+### 3. API模块 (`api_fetcher.py`)
+
+```python
+from src.api_fetcher import APIFetcher
+
+fetcher = APIFetcher()
+track_info = fetcher.fetch_track_info_by_api(track_id)
+```
+
+**功能：**
+- 从URL提取track_id
+- 通过API获取歌曲信息
+- 多端点自动尝试
+
+### 4. 转换模块 (`converter.py`)
 
 ```python
 from src.converter import AudioConverter
@@ -191,19 +269,34 @@ output_file = converter.convert_audio(input_file)
 
 ## 🐛 常见问题
 
-### 1. Chrome驱动问题
+### 1. 为什么有些歌曲下载不了？
+
+**原因：** 该歌曲可能：
+- 没有版权授权
+- 仅限APP内播放
+- 已经下架
+
+**解决：** 换一首在汽水音乐APP中可以正常播放的歌曲。
+
+### 2. 如何判断歌曲是否可下载？
+
+在汽水音乐APP中：
+- ✅ 能正常播放 = 可能可以下载
+- ❌ 显示"暂不支持播放" = 无法下载
+
+### 3. Chrome驱动问题
 
 **错误**: `selenium.common.exceptions.WebDriverException`
 
 **解决方案**:
 ```bash
-# 安装webdriver-manager (已在requirements.txt中)
-pip install webdriver-manager
+# 推荐：升级到 Selenium 4.6+，内置 Selenium Manager 会自动下载并管理 ChromeDriver
+pip install -U selenium
 
-# 或手动下载Chrome驱动并添加到PATH
+# 或手动下载 Chrome 驱动并加入 PATH
 ```
 
-### 2. 音频转换失败
+### 4. 音频转换失败
 
 **现象**: 显示 "使用备用方案：重命名文件"
 
@@ -215,50 +308,96 @@ pip install webdriver-manager
 # Ubuntu: sudo apt install ffmpeg
 ```
 
-### 3. 页面解析失败
+### 5. 页面解析失败
 
 **错误**: "未找到音频信息"
 
 **可能原因**:
-- 网页结构已更新
+- 歌曲没有版权
 - 网络连接问题
-- 反爬虫机制
+- 链接已失效
 
 **解决方案**:
+- 检查歌曲是否能在APP中播放
 - 检查网络连接
-- 更新User-Agent
-- 查看生成的debug文件
+- 尝试其他歌曲链接
+- 运行 `python test_system.py` 检查系统状态
 
-### 4. 下载速度慢
+### 6. 程序运行很慢
 
 **优化方案**:
 - 检查网络连接
-- 修改 `TIMEOUT` 和 `DELAY_SECONDS` 配置
-- 使用代理（需自行配置）
+- 关闭其他占用网络的程序
+- 耐心等待（首次运行需要初始化浏览器）
 
 ## 📝 开发说明
+
+### 项目结构
+
+```
+Soda_music_crawler/
+├── main.py                    # 程序入口
+├── test_system.py             # 系统测试脚本
+├── requirements.txt           # 项目依赖
+├── README.md                  # 项目文档
+├── 使用说明.md                # 详细使用指南
+├── downloads/                 # 下载目录 (自动创建)
+├── debug_page_fixed.html     # 调试文件 (运行时生成)
+└── src/
+    ├── config.py              # 配置管理
+    ├── crawler.py             # 爬虫核心 (多策略)
+    ├── parser.py              # HTML解析 (智能搜索)
+    ├── api_fetcher.py         # API接口获取
+    └── converter.py           # 音频格式转换
+```
+
+### 技术特性
+
+#### 多策略架构
+- **策略1**: API接口 - 最稳定，不依赖HTML结构
+- **策略2**: HTML解析 - 智能搜索，多模式匹配
+- **策略3**: URL搜索 - 兜底方案，直接匹配
+
+#### 智能解析
+- 多种数据源模式匹配
+- 自动检测版权状态
+- 递归搜索音频信息
+- 过滤占位符数据
+
+#### 反爬虫对策
+- 使用真实浏览器User-Agent
+- 隐藏WebDriver特征
+- 临时profile隔离
+- 自动处理重定向
+
+#### 错误处理
+- 详细的错误提示
+- 多策略自动降级
+- 完善的异常捕获
+- 版权状态检测
 
 ### 添加新的解析模式
 
 在 `src/parser.py` 中添加新的正则表达式模式：
 
 ```python
-self.patterns = [
+self.data_patterns = [
     r'现有模式1',
     r'现有模式2',
     r'新的模式',  # 添加新模式
 ]
 ```
 
-### 支持新的音频格式
+### 支持新的API端点
 
-在 `src/converter.py` 中扩展转换功能：
+在 `src/api_fetcher.py` 中扩展API端点：
 
 ```python
-def convert_audio(self, input_file: str, output_format: str = "mp3"):
-    # 支持更多格式
-    if output_format in ["mp3", "wav", "flac", "aac"]:
-        # 转换逻辑
+api_endpoints = [
+    f"现有端点1",
+    f"现有端点2",
+    f"新的端点",  # 添加新端点
+]
 ```
 
 ### 自定义请求头
@@ -273,6 +412,22 @@ def get_headers(cls):
         # 其他请求头
     }
 ```
+
+## 📊 更新日志
+
+### v2.0 (2024-05-31)
+- ✅ 添加API接口支持
+- ✅ 实现多策略智能获取
+- ✅ 改进版权检测机制
+- ✅ 更详细的错误提示
+- ✅ 更稳定的解析逻辑
+- ✅ 添加完整测试套件
+- ✅ 优化代码结构
+
+### v1.0
+- 基础HTML解析功能
+- Selenium动态渲染
+- MP4转MP3转换
 
 ## 📄 许可证
 

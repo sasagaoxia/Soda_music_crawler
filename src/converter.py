@@ -6,71 +6,71 @@
 import os
 import shutil
 from pathlib import Path
-from moviepy import AudioFileClip
-from .config import Config
 from typing import Optional
+
+from moviepy import AudioFileClip
+
+from .config import Config
+
 
 class AudioConverter:
     """音频转换器"""
-    
+
     def __init__(self, output_format: str = None, bitrate: str = None):
         self.output_format = output_format or Config.OUTPUT_FORMAT
         self.bitrate = bitrate or Config.BITRATE
-    
+
+    def _build_output_path(self, input_file: str) -> Path:
+        return Path(input_file).with_suffix(f'.{self.output_format}')
+
     def convert_audio(self, input_file: str, keep_original: bool = None) -> Optional[str]:
         """转换音频格式"""
         if keep_original is None:
             keep_original = Config.KEEP_ORIGINAL
-            
+
+        input_path = Path(input_file)
+        output_path = self._build_output_path(input_file)
+
         try:
-            output_file = input_file.replace('.mp4', f'.{self.output_format}')
-            
-            print(f"🔄 开始转换音频格式: {os.path.basename(input_file)} -> {self.output_format.upper()}")
-            
-            # 使用MoviePy转换
-            audio_clip = AudioFileClip(input_file)
-            
-            # 尝试不同的参数组合
+            print(f"🔄 开始转换音频格式: {input_path.name} -> {self.output_format.upper()}")
+
+            audio_clip = AudioFileClip(str(input_path))
             try:
-                audio_clip.write_audiofile(output_file, bitrate=self.bitrate)
+                audio_clip.write_audiofile(str(output_path), bitrate=self.bitrate, logger=None)
             except TypeError:
-                try:
-                    audio_clip.write_audiofile(output_file)
-                except TypeError:
-                    audio_clip.write_audiofile(output_file, logger=None)
-            
-            audio_clip.close()
-            
-            print(f"✅ 音频转换完成: {os.path.basename(output_file)}")
-            
-            # 删除原文件
+                # 兼容更老的 moviepy 接口
+                audio_clip.write_audiofile(str(output_path))
+            finally:
+                audio_clip.close()
+
+            print(f"✅ 音频转换完成: {output_path.name}")
+
             if not keep_original:
-                os.remove(input_file)
-                print(f"🗑️ 已删除原文件: {os.path.basename(input_file)}")
-            
-            return output_file
-            
+                os.remove(input_path)
+                print(f"🗑️ 已删除原文件: {input_path.name}")
+
+            return str(output_path)
+
         except Exception as e:
             print(f"❌ 音频转换失败: {e}")
-            
-            # 备用方案：重命名文件
             return self._fallback_rename(input_file, keep_original)
-    
+
     def _fallback_rename(self, input_file: str, keep_original: bool) -> Optional[str]:
-        """备用方案：重命名文件"""
+        """备用方案：直接复制并改后缀（非真正转码）"""
+        input_path = Path(input_file)
+        output_path = self._build_output_path(input_file)
         try:
             print("🔄 使用备用方案：重命名文件")
-            output_file = input_file.replace('.mp4', f'.{self.output_format}')
-            shutil.copy2(input_file, output_file)
-            
+            shutil.copy2(input_path, output_path)
+
             if not keep_original:
-                os.remove(input_file)
-                print(f"🗑️ 已删除原文件: {os.path.basename(input_file)}")
-            
-            print(f"✅ 文件已重命名: {os.path.basename(output_file)}")
+                os.remove(input_path)
+                print(f"🗑️ 已删除原文件: {input_path.name}")
+
+            print(f"✅ 文件已重命名: {output_path.name}")
             print("⚠️ 注意：这只是重命名，不是真正的格式转换")
-            return output_file
-            
+            return str(output_path)
+
         except Exception as e:
             print(f"❌ 备用方案失败: {e}")
             return None
