@@ -1,0 +1,13 @@
+当前包：无API + 多线程剪贴板 + 不弹白页 + 删除60秒以内短音频
+
+使用：
+1. 第一次双击 01_安装依赖.bat
+2. 下载时双击 02_启动剪贴板监听.bat
+3. 在汽水音乐复制分享链接即可自动下载
+
+重要配置：src/config.py
+- MAX_DOWNLOAD_WORKERS = 2
+- SHORT_AUDIO_THRESHOLD_SECONDS = 60
+- DELETE_SHORT_AUDIO = True
+- HEADLESS = True
+- HIDE_BROWSER_WINDOW = True

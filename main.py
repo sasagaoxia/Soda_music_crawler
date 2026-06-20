@@ -199,8 +199,37 @@ def _convert_existing_files():
         print("\n💥 没有文件被转换！")
 
 
+def _run_cli_mode_if_requested() -> bool:
+    """支持批处理文件直接启动指定模式。
+
+    用法：
+    - python main.py --clipboard  直接进入剪贴板监听
+    - python main.py --manual     直接进入手动连续下载
+    - python main.py --convert    直接转换 downloads 目录里的 MP4
+    """
+    args = {arg.lower() for arg in sys.argv[1:]}
+    if not args:
+        return False
+
+    if "--clipboard" in args or "-c" in args:
+        _clipboard_watch_loop()
+        return True
+    if "--manual" in args or "-m" in args:
+        _manual_download_loop()
+        return True
+    if "--convert" in args:
+        _convert_existing_files()
+        return True
+
+    print("❌ 未识别的启动参数。可用参数：--clipboard / --manual / --convert")
+    return True
+
+
 def main():
     try:
+        if _run_cli_mode_if_requested():
+            return
+
         while True:
             _print_menu()
             choice = input("请选择 (1/2/3/0): ").strip()
