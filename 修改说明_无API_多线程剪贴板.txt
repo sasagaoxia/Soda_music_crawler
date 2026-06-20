@@ -1,0 +1,26 @@
+修改说明：无API下载 + 多线程剪贴板监听版
+
+1. 删除主流程里的 API 下载策略
+   - 不再调用 music.douyin.com/api/song/detail
+   - 不再调用 douyin.com/aweme/v1/web/music/detail
+   - 主流程只走分享页面解析和页面源码音频地址搜索
+
+2. 剪贴板监听改成多线程
+   - 选择菜单 2
+   - 复制汽水音乐分享链接后，会自动加入下载队列
+   - 下载过程中仍会继续监听剪贴板
+   - 复制下一首链接后会自动排队，不用等上一首结束
+
+3. 线程数配置
+   - src/config.py
+   - MAX_DOWNLOAD_WORKERS = 2
+   - 每个任务会单独打开 Selenium 浏览器实例，线程数不建议太大
+
+4. 继续保留 60 秒以内短音频自动删除
+   - SHORT_AUDIO_THRESHOLD_SECONDS = 60
+   - DELETE_SHORT_AUDIO = True
+
+5. 使用
+   py main.py
+   选择 2
+   去汽水音乐复制分享链接即可
